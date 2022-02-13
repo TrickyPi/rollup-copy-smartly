@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "rm -rf lib/ && tsc -w",
-    "test": "vitest"
+    "test": "vitest --run"
   },
   "keywords": [
     "rollup",
