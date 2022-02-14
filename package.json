@@ -2,9 +2,10 @@
   "name": "rollup-copy-smart",
   "version": "1.0.0",
   "description": "a rollup copy plugin",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "dev": "rm -rf lib/ && tsc -w",
+    "build": "rm -rf lib/ && tsc",
     "test": "vitest --run"
   },
   "keywords": [
@@ -20,5 +21,8 @@
     "rollup": "^2.67.2",
     "typescript": "^4.5.5",
     "vitest": "^0.3.3"
+  },
+  "dependencies": {
+    "fs-extra": "^10.0.0"
   }
 }
