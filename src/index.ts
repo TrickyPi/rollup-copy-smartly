@@ -1,4 +1,4 @@
-import fs from "fs";
+import fse from "fs-extra";
 import { Plugin, ChangeEvent } from "rollup";
 
 export interface Options {
@@ -12,7 +12,9 @@ export interface Target {
 
 export default function copy({ targets }: Options): Plugin {
   //use glob to complete file path
-  const changedFilesMap = new Map<string, ChangeEvent>([]);
+  const changedFilesMap = new Map<string, ChangeEvent>(
+    targets.map(({ file }) => [file, "create"])
+  );
   const targetsMap = new Map(
     targets.map((item) => {
       const { file } = item;
@@ -29,16 +31,17 @@ export default function copy({ targets }: Options): Plugin {
     watchChange(id, e) {
       changedFilesMap.set(id, e.event);
     },
-    async generateBundle() {
+    async writeBundle() {
       changedFilesMap.forEach((event, file) => {
         const { dest } = targetsMap.get(file)!;
         switch (event) {
           case "delete":
-            fs.rmSync(dest, { force: true });
+            fse.rmSync(dest, { force: true });
             break;
           case "update":
           case "create":
-            fs.writeFileSync(dest, fs.readFileSync(file));
+            fse.ensureFileSync(dest);
+            fse.appendFileSync(dest, fse.readFileSync(file));
             break;
         }
       });
