@@ -34,15 +34,11 @@ export default function copy({ targets }: Options): Plugin {
         const { dest } = targetsMap.get(file)!;
         switch (event) {
           case "delete":
-            fs.rmSync(dest);
+            fs.rmSync(dest, { force: true });
             break;
           case "update":
           case "create":
-            this.emitFile({
-              type: "asset",
-              name: dest,
-              source: fs.readFileSync(file),
-            });
+            fs.writeFileSync(dest, fs.readFileSync(file));
             break;
         }
       });
