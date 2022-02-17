@@ -69,24 +69,36 @@ const rollConfig: RollupOptions = {
 };
 
 describe("test", async () => {
+  const copyPlugin = copy({
+    src: "__tests__/fixture/src",
+    pattern: /\.html$/,
+    dest: "__tests__/fixture/dist",
+  });
+  const file = resolve("__tests__/fixture/src/template.html");
+  const destFile = resolve("__tests__/fixture/dist/template.html");
+
   afterEach(() => {
     fse.rmSync(resolve("__tests__/fixture/dist"), {
       force: true,
       recursive: true,
     });
+    fse.rmSync(file, { force: true });
+  });
+
+  test("rollup build", async () => {
+    fse.writeFileSync(file, "build");
+    const { input, output: outputOption } = rollConfig;
+    const inputOptions = {
+      input,
+      plugins: [copyPlugin],
+    };
+    const bundle = await rollup(inputOptions);
+    await bundle.write(outputOption as OutputOptions);
+    await bundle.close();
+    expect(fse.readFileSync(destFile, "utf-8")).toEqual("build");
   });
   test("update file", async () => {
-    const file = resolve("__tests__/fixture/src/template.html");
-    const dest = resolve("__tests__/fixture/dist/template.html");
     fse.writeFileSync(file, "");
-    const copyPlugin = copy({
-      targets: [
-        {
-          file: file,
-          dest: dest,
-        },
-      ],
-    });
     rollConfig.plugins = [copyPlugin];
     const watcher = watch(rollConfig);
     await sequence(watcher, [
@@ -97,38 +109,45 @@ describe("test", async () => {
       () => {
         fse.writeFileSync(file, "div");
       },
+      () => {
+        const content = fse.readFileSync(destFile, "utf-8");
+        expect(content).toEqual("div");
+      },
+    ]);
+  });
+  test("delete file", async () => {
+    fse.writeFileSync(file, "div");
+    rollConfig.plugins = [copyPlugin];
+    const watcher = watch(rollConfig);
+    await sequence(watcher, [
       "START",
       "BUNDLE_START",
       "BUNDLE_END",
       "END",
       () => {
-        const file = fse.readFileSync(dest, "utf-8");
-        expect(file).toEqual("div");
+        expect(fse.existsSync(destFile)).toBe(true);
+        fse.rmSync(file);
+      },
+      () => {
+        expect(fse.existsSync(destFile)).toBe(false);
       },
     ]);
-    fse.rmSync(file);
   });
-  test("rollup build", async () => {
-    const file = resolve("__tests__/fixture/src/template.html");
-    const dest = resolve("__tests__/fixture/dist/template.html");
-    fse.writeFileSync(file, "build");
-    const copyPlugin = copy({
-      targets: [
-        {
-          file: file,
-          dest: dest,
-        },
-      ],
-    });
-    const { input, output: outputOption } = rollConfig;
-    const inputOptions = {
-      input,
-      plugins: [copyPlugin],
-    };
-    const bundle = await rollup(inputOptions);
-    await bundle.write(outputOption as OutputOptions);
-    await bundle.close();
-    expect(fse.readFileSync(dest, "utf-8")).toEqual("build");
-    fse.rmSync(file);
+  test("delete file", async () => {
+    rollConfig.plugins = [copyPlugin];
+    const watcher = watch(rollConfig);
+    await sequence(watcher, [
+      "START",
+      "BUNDLE_START",
+      "BUNDLE_END",
+      "END",
+      () => {
+        fse.outputFile(file, "div");
+      },
+      () => {
+        const content = fse.readFileSync(destFile, "utf-8");
+        expect(content).toEqual("div");
+      },
+    ]);
   });
 });
