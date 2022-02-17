@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "rm -rf lib/ && tsc -w",
     "build": "rm -rf lib/ && tsc",
-    "test": "vitest --run"
+    "test": "vitest --run --coverage"
   },
   "keywords": [
     "rollup",
@@ -17,13 +17,14 @@
   "license": "MIT",
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
+    "c8": "^7.11.0",
     "memfs": "^3.4.1",
     "rollup": "^2.67.2",
     "typescript": "^4.5.5",
     "vitest": "^0.3.3"
   },
   "dependencies": {
-    "fs-extra": "^10.0.0",
-    "chokidar": "^3.5.3"
+    "chokidar": "^3.5.3",
+    "fs-extra": "^10.0.0"
   }
 }
