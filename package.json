@@ -1,12 +1,13 @@
 {
-  "name": "rollup-copy-smart",
+  "name": "rollup-copy-smartly",
   "version": "1.0.0",
   "description": "a rollup copy plugin",
   "main": "lib/index.js",
   "scripts": {
     "dev": "rm -rf lib/ && tsc -w",
     "build": "rm -rf lib/ && tsc",
-    "test": "vitest --run --coverage"
+    "test": "vitest --run --coverage",
+    "prepare": "pnpm build"
   },
   "keywords": [
     "rollup",
@@ -26,5 +27,13 @@
   "dependencies": {
     "chokidar": "^3.5.3",
     "fs-extra": "^10.0.0"
-  }
+  },
+  "peerDependencies": {
+    "rollup": ">=2.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TrickyPi/rollup-copy-smartly.git"
+  },
+  "homepage": "https://github.com/TrickyPi/rollup-copy-smartly#readme"
 }
