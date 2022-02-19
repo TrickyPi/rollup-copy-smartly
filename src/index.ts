@@ -1,25 +1,28 @@
 import { resolve, relative } from "path";
-import fse from "fs-extra";
-import chokidar from "chokidar";
+import fse, { Dirent } from "fs-extra";
+import chokidar, { FSWatcher } from "chokidar";
 import { Plugin } from "rollup";
-interface Target {
+
+interface NormalizedTarget {
+  src: string;
+  pattern: RegExp[];
+  dest: string[];
+}
+interface CopyTarget {
   src: string;
   pattern: RegExp | RegExp[];
-  dest: string;
+  dest: string | string[];
 }
 
-function isCopyFile(file: string, pattern: Target["pattern"]) {
-  if (Array.isArray(pattern)) {
-    let isCopyFile = false;
-    for (let item of pattern) {
-      if (item.test(file)) {
-        isCopyFile = true;
-        break;
-      }
+function isCopyFile(file: string, pattern: NormalizedTarget["pattern"]) {
+  let isCopyFile = false;
+  for (let item of pattern) {
+    if (item.test(file)) {
+      isCopyFile = true;
+      break;
     }
-    return isCopyFile;
   }
-  return pattern.test(file);
+  return isCopyFile;
 }
 
 function createWatcher(sources: string) {
@@ -31,7 +34,7 @@ function createWatcher(sources: string) {
   });
 }
 
-function initWatcher({ src, pattern, dest }: Target) {
+function initWatcher({ src, pattern, dest }: NormalizedTarget) {
   const watcher = createWatcher(src);
   watcher.on("unlink", handleEevent.bind(null, "unlink"));
   watcher.on("add", handleEevent.bind(null, "add"));
@@ -39,41 +42,76 @@ function initWatcher({ src, pattern, dest }: Target) {
   function handleEevent(event: "unlink" | "add" | "change", file: string) {
     const absoluteFile = resolve(file);
     if (!isCopyFile(absoluteFile, pattern)) return;
-    const destfile = resolve(dest, relative(src, file));
-    switch (event) {
-      case "unlink":
-        fse.rmSync(destfile, { force: true });
-        break;
-      case "add":
-      case "change":
-        fse.copySync(absoluteFile, destfile);
-        break;
-    }
+    dest.forEach((destItem) => {
+      const destfile = resolve(destItem, relative(src, file));
+      switch (event) {
+        case "unlink":
+          fse.rmSync(destfile, { force: true });
+          break;
+        case "add":
+        case "change":
+          fse.copyFileSync(absoluteFile, destfile);
+          break;
+      }
+    });
   }
+  return watcher;
 }
 
-function callOnceFactory<T extends Function>(fn: T, count: number) {
-  let called = 0;
-  return (...args: Parameters<T>) => {
-    if (called >= count) return;
-    count++;
-    return fn(...args);
+function getFile(dir: string) {
+  function readdir(dir: string): [Dirent, string][] {
+    return fse.readdirSync(dir, { withFileTypes: true }).map((item) => {
+      return [item, resolve(dir, item.name)];
+    });
+  }
+  let files = [];
+  const stack = readdir(dir);
+  while (stack.length) {
+    const [item, absolutePath] = stack.shift()!;
+    if (item!.isDirectory()) {
+      stack.push(...readdir(absolutePath));
+    } else {
+      files.push(absolutePath);
+    }
+  }
+  return files;
+}
+
+function normalize({ src, pattern, dest }: CopyTarget) {
+  return {
+    src,
+    pattern: toArray(pattern) as RegExp[],
+    dest: toArray(dest) as string[],
   };
 }
 
-export default function copy({ src, pattern, dest }: Target): Plugin {
-  const initWatcherOnce = callOnceFactory<typeof initWatcher>(initWatcher, 1);
+function toArray<T>(value: T) {
+  return Array.isArray(value) ? value : [value];
+}
+
+let watcher: FSWatcher | null = null;
+
+export default function copy(copyTarget: CopyTarget): Plugin {
+  const { src, pattern, dest } = normalize(copyTarget);
   return {
     name: "copy",
     writeBundle() {
-      const dir = fse.readdirSync(src);
-      dir.forEach((file) => {
-        const absoluteFile = resolve(src, file);
-        if (isCopyFile(absoluteFile, pattern)) {
-          fse.copySync(absoluteFile, resolve(dest, file));
+      getFile(src).forEach((file) => {
+        if (isCopyFile(file, pattern)) {
+          dest.forEach((destItem) => {
+            fse.copyFileSync(file, resolve(destItem, relative(src, file)));
+          });
         }
       });
-      this.meta.watchMode && initWatcherOnce({ src, pattern, dest });
+      if (this.meta.watchMode && !watcher) {
+        watcher = initWatcher({ src, pattern, dest });
+      }
+    },
+    closeWatcher() {
+      if (watcher) {
+        watcher.close();
+        watcher = null;
+      }
     },
   };
 }
