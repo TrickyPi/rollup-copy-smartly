@@ -46,11 +46,11 @@ function initWatcher({ src, pattern, dest }: NormalizedTarget) {
       const destfile = resolve(destItem, relative(src, file));
       switch (event) {
         case "unlink":
-          fse.rmSync(destfile, { force: true });
+          fse.rm(destfile, { force: true });
           break;
         case "add":
         case "change":
-          fse.copyFileSync(absoluteFile, destfile);
+          fse.copy(absoluteFile, destfile);
           break;
       }
     });
@@ -99,7 +99,7 @@ export default function copy(copyTarget: CopyTarget): Plugin {
       getFile(src).forEach((file) => {
         if (isCopyFile(file, pattern)) {
           dest.forEach((destItem) => {
-            fse.copyFileSync(file, resolve(destItem, relative(src, file)));
+            fse.copy(file, resolve(destItem, relative(src, file)));
           });
         }
       });
