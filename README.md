@@ -44,6 +44,6 @@ export default {
 
 | option  | type                | description                                                                          |
 | ------- | ------------------- | ------------------------------------------------------------------------------------ |
-| src     | string              | Paths to dir which will be watching, it could be absolute path or relative path      |
+| src     | string              | Path to dir which will be watching, it could be absolute path or relative path      |
 | pattern | RegExp or RegExp[ ] | Filter specific files                                                                |
 | dest    | string or string[ ] | Paths to dir which are output directorys, it could be absolute path or relative path |
