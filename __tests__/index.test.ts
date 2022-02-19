@@ -15,19 +15,22 @@ import copy from "../src/index";
 interface SequenceFunction {
   (event?: RollupWatcherEvent): void;
 }
+
 type SequenceEvents = (RollupWatcherEvent["code"] | SequenceFunction)[];
+
+function wait(timeout = 333) {
+  return new Promise<void>((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, timeout);
+  });
+}
+
 async function sequence(
   watcher: RollupWatcher,
   events: SequenceEvents,
-  timeout = 300
+  timeout = 333
 ) {
-  function wait(timeout = 100) {
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        resolve();
-      }, timeout);
-    });
-  }
   await new Promise<void>((fulfil, reject) => {
     function go(event?: RollupWatcherEvent) {
       const next = events.shift();
@@ -57,7 +60,7 @@ async function sequence(
     }
     go();
   });
-  return wait(100);
+  return wait(timeout);
 }
 
 const rollConfig: RollupOptions = {
@@ -95,6 +98,7 @@ describe("test", async () => {
     const bundle = await rollup(inputOptions);
     await bundle.write(outputOption as OutputOptions);
     await bundle.close();
+    await wait(333);
     expect(fse.readFileSync(destFile, "utf-8")).toEqual("build");
   });
   test("update file", async () => {
@@ -133,7 +137,7 @@ describe("test", async () => {
       },
     ]);
   });
-  test("delete file", async () => {
+  test("add file", async () => {
     rollConfig.plugins = [copyPlugin];
     const watcher = watch(rollConfig);
     await sequence(watcher, [
@@ -142,7 +146,7 @@ describe("test", async () => {
       "BUNDLE_END",
       "END",
       () => {
-        fse.outputFile(file, "div");
+        fse.writeFileSync(file, "div");
       },
       () => {
         const content = fse.readFileSync(destFile, "utf-8");
