@@ -2,7 +2,7 @@
 
 ## Features
 
-Simple Configuration
+simple configuration, response for file change, delete and create.
 
 ## Getting Started
 
