@@ -3,6 +3,7 @@ import fse, { Dirent } from "fs-extra";
 import chokidar, { FSWatcher } from "chokidar";
 import { Plugin } from "rollup";
 
+type Arrayable<T> = T | Array<T>;
 interface NormalizedTarget {
   src: string;
   pattern: RegExp[];
@@ -80,19 +81,18 @@ function getFile(dir: string) {
 function normalize({ src, pattern, dest }: CopyTarget) {
   return {
     src,
-    pattern: toArray(pattern) as RegExp[],
-    dest: toArray(dest) as string[],
+    pattern: toArray(pattern),
+    dest: toArray(dest),
   };
 }
 
-function toArray<T>(value: T) {
+function toArray<T>(value: Arrayable<T>): Array<T> {
   return Array.isArray(value) ? value : [value];
 }
 
-let watcher: FSWatcher | null = null;
-
 export default function copy(copyTarget: CopyTarget): Plugin {
   const { src, pattern, dest } = normalize(copyTarget);
+  let watcher: FSWatcher | null = null;
   return {
     name: "copy",
     writeBundle() {
