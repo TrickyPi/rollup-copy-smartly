@@ -11,7 +11,6 @@ import {
 import { test, describe, expect, afterEach } from "vitest";
 import copy from "../src/index";
 
-//copy from https://github.com/rollup/rollup/blob/master/test/watch/index.js#L37
 interface SequenceFunction {
   (event?: RollupWatcherEvent): void;
 }
@@ -49,7 +48,7 @@ async function sequence(
         });
       } else {
         Promise.resolve()
-          .then(() => wait(timeout)) // gah, this appears to be necessary to fix random errors
+          .then(() => wait(timeout))
           .then(() => next(event))
           .then(() => go())
           .catch((error) => {
