@@ -27,7 +27,7 @@ pnpm add -D rollup-copy-smartly
 **rollup.config.js**
 
 ```js
-import copy from "rollup-copy-smart";
+import copy from "rollup-copy-smartly";
 export default {
     ...
     plugins: [
