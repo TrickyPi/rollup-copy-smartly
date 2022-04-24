@@ -2,7 +2,7 @@
 
 ## Features
 
-simple configuration, response for file change, delete and create.
+Smartly copy files if they are changed, created or deleted.
 
 ## Getting Started
 
