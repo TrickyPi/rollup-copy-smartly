@@ -1,6 +1,6 @@
 {
   "name": "rollup-copy-smartly",
-  "version": "1.0.3",
+  "version": "2.0.0",
   "description": "a rollup copy plugin",
   "main": "dist/lib/index.js",
   "module": "dist/es/index.js",
