@@ -1,7 +1,7 @@
 import { resolve, relative } from "path";
 import fse, { Dirent } from "fs-extra";
-import chokidar, { FSWatcher } from "chokidar";
-import { Plugin } from "rollup";
+import chokidar, { type FSWatcher } from "chokidar";
+import type { Plugin } from "rollup";
 
 type Arrayable<T> = T | Array<T>;
 interface NormalizedTarget {
